@@ -570,6 +570,9 @@ ORDER BY  cv.label
           if (!empty($field['required']) ||
             !empty($this->_params['fields'][$fieldName])
           ) {
+            if ($tableName == 'cividiscount_track') {
+              $this->_civiDiscount = TRUE;
+            }
             if ($tableName == 'civicrm_contribution') {
               $this->_contribField = TRUE;
             }
@@ -654,6 +657,13 @@ ORDER BY  cv.label
             LEFT JOIN civicrm_financial_trxn ft
                   ON (ft.id = eft.financial_trxn_id AND eft.entity_table = 'civicrm_contribution') AND
                      (ft.is_payment = 1)
+      ";
+    }
+    if ($this->_civiDiscount) {
+      $this->_from .= "
+        LEFT JOIN cividiscount_track cividiscount_track_civireport
+          ON cividiscount_track_civireport.entity_table = 'civicrm_participant' AND
+            cividiscount_track_civireport.entity_id = {$this->_aliases['civicrm_participant']}.id
       ";
     }
   }
