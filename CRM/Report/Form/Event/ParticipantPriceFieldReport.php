@@ -366,6 +366,16 @@ class CRM_Report_Form_Event_ParticipantPriceFieldReport extends CRM_Report_Form_
           ),
         ),
       ),
+      'cividiscount_track' => array(
+        'dao' => 'CRM_CiviDiscount_DAO_Track',
+        'grouping' => 'event-fields',
+        'fields' => array(
+          'description' => array(
+            'title' => ts('CiviDiscount'),
+            'dbAlias' => 'cividiscount_track_civireport.description',
+          ),
+        ),
+      ),
     );
 
     $this->_options = array(
