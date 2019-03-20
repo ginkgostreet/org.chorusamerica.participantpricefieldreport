@@ -911,6 +911,40 @@ ORDER BY  cv.label
       }
       $entryFound = $this->alterDisplayAddressFields($row, $rows, $rowNum, 'event/ParticipantListing', 'List all participant(s) for this ') ? TRUE : $entryFound;
 
+      // handle price fields
+      if (count($priceFieldIDs) > 0) {
+        $lineItems = CRM_Price_BAO_LineItem::getLineItems($row['civicrm_participant_participant_record']);
+
+        $lineItemsKeyedByColName = array();
+        foreach ($lineItems as $lineItem) {
+          // The intent appears to be that radio buttons and checkboxes
+          // appear in the format "Field Name - Option Name." Here we
+          // exclude text fields.
+          $key = $lineItem['field_title'];
+          if ($lineItem['html_type'] !== 'Text') {
+            // CiviDiscount modifies the label of a lineItem with
+            // text like (Includes applied discount code ABC123: Description).
+            // This report depends on the lineItem labels matching those
+            // of the priceFieldValue, so we have to strip that out.
+            $label = preg_replace('# \([^)]+ discount code [^)]+\)$#', '', $lineItem['label']);
+            $key .= ' - ' . $label;
+          }
+
+          $lineItemsKeyedByColName[$key] = $lineItem;
+        }
+
+        // set defaults for columns which are not represented in the line
+        // items for the current registration
+        foreach ($priceFieldValueColNames as $column) {
+          $rows[$rowNum][$column . 'pmt'] = 0;
+        }
+
+        // populate columns which are represented in the line items
+        foreach ($lineItemsKeyedByColName as $colName => $lineItem) {
+          $rows[$rowNum][$colName . 'pmt'] = $lineItem['line_total'];
+        }
+      }
+
       // skip looking further in rows, if first row itself doesn't
       // have the column we need
       if (!$entryFound) {
