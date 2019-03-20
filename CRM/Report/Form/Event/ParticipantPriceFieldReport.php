@@ -758,6 +758,40 @@ ORDER BY  cv.label
     $contributionStatus = CRM_Contribute_PseudoConstant::contributionStatus();
     $paymentInstruments = CRM_Contribute_PseudoConstant::paymentInstrument();
 
+    $priceFieldIDs = array();
+    foreach ($this->_params['fields'] as $fieldName => $ignore) {
+      @list($__price, $__field, $__id) = explode('_', $fieldName);
+      if ($__price == 'price' && $__field == 'field') {
+        $priceFieldIDs[] = $__id;
+      }
+    }
+    if (count($priceFieldIDs) > 0) {
+      $priceFields = civicrm_api3('PriceField', 'get', array(
+        'id' => array('IN' => $priceFieldIDs),
+        'api.PriceFieldValue.get' => array(),
+        'options' => array('limit' => 0),
+        'is_active' => 1,
+      ));
+      foreach ($priceFields['values'] as $pf) {
+        foreach ($pf['api.PriceFieldValue.get']['values'] as $option) {
+          $columnHeader = $pf['label'];
+          if ($pf['html_type'] !== 'Text') {
+            $columnHeader .= ' - ' . $option['label'];
+          }
+          $priceFieldValueColNames[] = $columnHeader;
+        }
+      }
+      $additionalColumnHeaders = array();
+      foreach ($priceFieldValueColNames as $colName) {
+        $additionalColumnHeaders[$colName . 'pmt'] = array(
+          'type' => CRM_Utils_Type::T_MONEY,
+          'display' => true,
+          'title' => $colName . ' pmt($)',
+        );
+      }
+      $this->_columnHeaders = array_merge($this->_columnHeaders, $additionalColumnHeaders);
+    }
+
     foreach ($rows as $rowNum => $row) {
       // make count columns point to detail report
       // convert display name to links
