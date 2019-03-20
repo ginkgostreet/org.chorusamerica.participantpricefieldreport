@@ -542,6 +542,19 @@ ORDER BY  cv.label
       $this->_columnHeaders['blankColumnBegin']['title'] = '_ _ _ _';
     }
     foreach ($this->_columns as $tableName => $table) {
+
+      /**
+       * We add the price sets/fields to the Columns tab so they can
+       * be selected/saved, but the values aren't retrieved and appended
+       * to the report until after the report query has executed. As such,
+       * they should not be a part of the SELECT. We don't assign a DAO
+       * when defining the columns, which makes it easy to skip them here.
+       *
+       */
+      if (empty($table['dao'])) {
+        continue;
+      }
+
       if (array_key_exists('fields', $table)) {
         foreach ($table['fields'] as $fieldName => $field) {
           if (!empty($field['required']) ||
