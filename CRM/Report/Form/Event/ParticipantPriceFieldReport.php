@@ -488,7 +488,7 @@ class CRM_Report_Form_Event_ParticipantPriceFieldReport extends CRM_Report_Form_
     while ($dao->fetch()) {
       $set = array(
         'grouping' => $dao->name,
-        'group_title' => $dao->title,
+        'group_title' => 'Price Set: ' . $dao->title,
         'fields' => array(),
       );
       $fields = CRM_Core_DAO::executeQuery('SELECT id, name, label
