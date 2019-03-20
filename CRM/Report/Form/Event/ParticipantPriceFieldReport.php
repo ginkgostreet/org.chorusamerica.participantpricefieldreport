@@ -40,6 +40,8 @@ class CRM_Report_Form_Event_ParticipantPriceFieldReport extends CRM_Report_Form_
   protected $_balance = FALSE;
   protected $activeCampaigns;
 
+  protected $_civiDiscount = FALSE;
+
   protected $_customGroupExtends = array(
     'Participant',
     'Contact',
