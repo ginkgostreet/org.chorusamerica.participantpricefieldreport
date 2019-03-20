@@ -30,7 +30,7 @@
  * @package CRM
  * @copyright CiviCRM LLC (c) 2004-2018
  */
-class CRM_Report_Form_Event_ParticipantListing extends CRM_Report_Form_Event {
+class CRM_Report_Form_Event_ParticipantPriceFieldReport extends CRM_Report_Form_Event {
 
   protected $_summary = NULL;
 
@@ -385,6 +385,8 @@ class CRM_Report_Form_Event_ParticipantListing extends CRM_Report_Form_Event {
       ),
     );
 
+    $this->_columns += $this->getPriceFieldColumns();
+
     // CRM-17115 avoid duplication of sort_name - would be better to standardise name
     // & behaviour across reports but trying for no change at this point.
     $this->_columns['civicrm_contact']['fields']['sort_name']['no_display'] = TRUE;
@@ -408,6 +410,93 @@ class CRM_Report_Form_Event_ParticipantListing extends CRM_Report_Form_Event {
 
     $this->_currencyColumn = 'civicrm_participant_fee_currency';
     parent::__construct();
+  }
+
+  /**
+   * Define the columns for all event price sets/fields,
+   * as defined by a filter, or lack thereof.
+   *
+   * @return void
+   */
+  protected function getPriceFieldColumns() {
+    $dao = NULL;
+
+    if (defined('PARTICIPANT_PRICE_FIELD_REPORT_FILTER')) {
+      $filter = PARTICIPANT_PRICE_FIELD_REPORT_FILTER;
+
+      if (is_string($filter)) {
+        // all price sets like filter
+        $dao = CRM_Core_DAO::executeQuery('SELECT id, name, title
+          FROM civicrm_price_set
+          WHERE is_active=1
+            AND extends=1
+            AND title LIKE %1
+          ORDER BY title ASC
+        ', array (
+          1 => array($filter, 'String'),
+        ));
+      }
+      elseif (is_array($filter)) {
+        if (is_string($filter[0])) {
+          // all price sets listed by title
+          $dao = CRM_Core_DAO::executeQuery('SELECT id, name, title
+            FROM civicrm_price_set
+            WHERE is_active=1
+              AND extends=1
+              AND title IN (' . CRM_Core_DAO::escapeStrings($filter) . ')
+            ORDER BY title ASC
+          ');
+        }
+        elseif (is_numeric($filter[0])) {
+          // all price sets listed by id
+          $dao = CRM_Core_DAO::executeQuery('SELECT id, name, title
+            FROM civicrm_price_set
+            WHERE is_active=1
+              AND extends=1
+              AND id IN (' . implode(',', $filter) . ')
+            ORDER BY title ASC
+          ');
+        }
+      }
+    }
+    else {
+      // all price sets
+      $dao = CRM_Core_DAO::executeQuery("SELECT id, name, title
+        FROM civicrm_price_set
+        WHERE is_active=1
+          AND extends=1
+        ORDER BY title ASC
+      ");
+    }
+    if (!$dao) {
+      CRM_Core_Error::debug_log_message('Invalid price set filter definition: ' . print_r($filter, TRUE));
+      return [];
+    }
+
+    $sets = array();
+
+    while ($dao->fetch()) {
+      $set = array(
+        'grouping' => $dao->name,
+        'group_title' => $dao->title,
+        'fields' => array(),
+      );
+      $fields = CRM_Core_DAO::executeQuery('SELECT id, name, label
+        FROM civicrm_price_field
+        WHERE price_set_id=%1
+          AND is_active=1
+        ORDER BY weight ASC
+      ', array(
+        1 => array($dao->id, 'Integer')
+      ));
+      while ($fields->fetch()) {
+        $set['fields']["price_field_{$fields->id}"] = array(
+          'title' => $fields->label,
+        );
+      }
+      $sets[$dao->name] = $set;
+    }
+    return $sets;
   }
 
   /**
