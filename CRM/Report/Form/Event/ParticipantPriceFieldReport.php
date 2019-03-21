@@ -399,6 +399,10 @@ class CRM_Report_Form_Event_ParticipantPriceFieldReport extends CRM_Report_Form_
 
     $this->_columns += $this->getPriceFieldColumns();
 
+    if (defined('PARTICIPANT_PRICE_FIELD_REPORT_EXTENDS')) {
+      $this->_customGroupExtends = explode(',', PARTICIPANT_PRICE_FIELD_REPORT_EXTENDS);
+    }
+
     // CRM-17115 avoid duplication of sort_name - would be better to standardise name
     // & behaviour across reports but trying for no change at this point.
     $this->_columns['civicrm_contact']['fields']['sort_name']['no_display'] = TRUE;
