@@ -438,9 +438,9 @@ class CRM_Report_Form_Event_ParticipantPriceFieldReport extends CRM_Report_Form_
     $dao = NULL;
 
     if (defined('PARTICIPANT_PRICE_FIELD_REPORT_FILTER')) {
-      $filter = PARTICIPANT_PRICE_FIELD_REPORT_FILTER;
+      $filters = explode(',', PARTICIPANT_PRICE_FIELD_REPORT_FILTER);
 
-      if (is_string($filter)) {
+      if (count($filters) == 1) {
         // all price sets like filter
         $dao = CRM_Core_DAO::executeQuery('SELECT id, name, title
           FROM civicrm_price_set
@@ -449,30 +449,28 @@ class CRM_Report_Form_Event_ParticipantPriceFieldReport extends CRM_Report_Form_
             AND title LIKE %1
           ORDER BY title ASC
         ', array (
-          1 => array($filter, 'String'),
+          1 => array($filters[0], 'String'),
         ));
       }
-      elseif (is_array($filter)) {
-        if (is_string($filter[0])) {
-          // all price sets listed by title
-          $dao = CRM_Core_DAO::executeQuery('SELECT id, name, title
-            FROM civicrm_price_set
-            WHERE is_active=1
-              AND extends=1
-              AND title IN (' . CRM_Core_DAO::escapeStrings($filter) . ')
-            ORDER BY title ASC
-          ');
-        }
-        elseif (is_numeric($filter[0])) {
-          // all price sets listed by id
-          $dao = CRM_Core_DAO::executeQuery('SELECT id, name, title
-            FROM civicrm_price_set
-            WHERE is_active=1
-              AND extends=1
-              AND id IN (' . implode(',', $filter) . ')
-            ORDER BY title ASC
-          ');
-        }
+      elseif (is_numeric($filters[0])) {
+        // all price sets listed by id
+        $dao = CRM_Core_DAO::executeQuery('SELECT id, name, title
+          FROM civicrm_price_set
+          WHERE is_active=1
+            AND extends=1
+            AND id IN (' . PARTICIPANT_PRICE_FIELD_REPORT_FILTER . ')
+          ORDER BY title ASC
+        ');
+      }
+      else {
+        // all price sets listed by title
+        $dao = CRM_Core_DAO::executeQuery('SELECT id, name, title
+          FROM civicrm_price_set
+          WHERE is_active=1
+            AND extends=1
+            AND title IN (' . CRM_Core_DAO::escapeStrings($filters) . ')
+          ORDER BY title ASC
+        ');
       }
     }
     else {
@@ -485,7 +483,7 @@ class CRM_Report_Form_Event_ParticipantPriceFieldReport extends CRM_Report_Form_
       ");
     }
     if (!$dao) {
-      CRM_Core_Error::debug_log_message('Invalid price set filter definition: ' . print_r($filter, TRUE));
+      CRM_Core_Error::debug_log_message('Invalid price set filter definition: ' . PARTICIPANT_PRICE_FIELD_REPORT_FILTER);
       return [];
     }
 
