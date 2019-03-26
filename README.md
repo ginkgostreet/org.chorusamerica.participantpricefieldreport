@@ -2,7 +2,7 @@
 
 The Participant Price Field Report is a custom report that extends the functionality of the Participant Detail Report by including price field information in the display and export of the report. It also allows for some customization as to what type of custom fields are included as display options on the _Columns_ tab of the report.
 
-![Screenshot](/images/screenshot.png)
+![Screenshot](/images/screenshot.png?raw=true)
 
 The extension is licensed under [AGPL-3.0](LICENSE.txt).
 
